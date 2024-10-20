@@ -2,12 +2,13 @@
 name: Build Release
 
 on:
-  push:
-    tags:
-      - "v*"
-  pull_request:
-    branches:
-      - "*"
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to run the workflow on'
+        required: true
+        default: 'development'
+
 
 jobs:
   upload-release:
