@@ -681,14 +681,28 @@ public:
 
         root = expand_home_dir(root);
         QDir directory(root);
-        QStringList res = directory.entryList({ prefix + "*" });
-        if (res.size() == 0) {
-            std::string encoded_prefix = utf8_encode(prefix.toStdWString());
-            QStringList all_directory_files = directory.entryList();
+        QFileInfoList entry_list = directory.entryInfoList(
+                { prefix + "*" },
+                QDir::NoDot|QDir::Dirs|QDir::Files|QDir::Readable
+            );
+        QStringList result {};
+        QString sep = QDir::separator();
+
+        for (const auto& entry : entry_list) {
+            if (entry.isDir()) {
+                result.push_back(entry.fileName() + sep);
+            }
+            else {
+                result.push_back(entry.fileName());
+            }
+        }
+        if (result.size() == 0) {
+            const std::string encoded_prefix = utf8_encode(prefix.toStdWString());
+            const QFileInfoList all_directory_files = directory.entryInfoList();
             std::vector<std::pair<QString, int>> file_scores;
 
-            for (auto file : all_directory_files) {
-                std::string encoded_file = utf8_encode(file.toStdWString());
+            for (const auto& file : all_directory_files) {
+                std::string encoded_file = utf8_encode(file.fileName().toStdWString());
                 int score = 0;
                 if (is_fuzzy) {
                     score = static_cast<int>(rapidfuzz::fuzz::partial_ratio(encoded_prefix, encoded_file));
@@ -696,18 +710,19 @@ public:
                 else {
                     fts::fuzzy_match(encoded_prefix.c_str(), encoded_file.c_str(), score);
                 }
-                file_scores.push_back(std::make_pair(file, score));
+                const auto filename = (file.isDir() ? (file.fileName() + sep) : file.fileName());
+                file_scores.push_back(std::make_pair(filename, score));
             }
             std::sort(file_scores.begin(), file_scores.end(), [](std::pair<QString, int> lhs, std::pair<QString, int> rhs) {
                 return lhs.second > rhs.second;
                 });
-            for (auto [file, score] : file_scores) {
+            for (const auto& [file, score] : file_scores) {
                 if (score > 0) {
-                    res.push_back(file);
+                    result.push_back(file);
                 }
             }
         }
-        return res;
+        return result;
     }
 
     void on_select(const QModelIndex& index) {
@@ -721,7 +736,8 @@ public:
             parentWidget()->setFocus();
         }
         else {
-            line_edit->setText(full_path + sep);
+            QString canonical_path { QDir(full_path).canonicalPath() };
+            line_edit->setText(canonical_path + sep);
         }
     }
 };
