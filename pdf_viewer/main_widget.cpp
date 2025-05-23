@@ -1773,7 +1773,7 @@ void MainWidget::validate_render() {
     if (is_moving()) {
         is_render_invalidated = true;
         if (!hasFocus()) { // stop scrolling if the windows doesn't have focus
-            set_fixed_velocity(0);
+            set_fixed_velocity(0, 0);
         }
     }
 }
@@ -10858,6 +10858,21 @@ void MainWidget::focus_on_character_offset_into_document(int character_offset_in
 //    last_speed_update_time = QTime::currentTime();
 //}
 
+void MainWidget::handle_move_smooth_horizontal_hold(bool left) {
+
+    float max_velocity = left ? -SMOOTH_MOVE_MAX_VELOCITY : SMOOTH_MOVE_MAX_VELOCITY;
+
+    if (left) {
+        velocity_x -= (velocity_x - max_velocity) / 5.0f;
+    }
+    else {
+        velocity_x += (max_velocity - velocity_x) / 5.0f;
+    }
+
+    validation_interval_timer->setInterval(0);
+    last_speed_update_time = QTime::currentTime();
+}
+
 void MainWidget::handle_move_smooth_hold(bool down) {
 
     float max_velocity = down ? -SMOOTH_MOVE_MAX_VELOCITY : SMOOTH_MOVE_MAX_VELOCITY;
@@ -10997,10 +11012,11 @@ bool MainWidget::handle_annotation_move_finish(){
     return false;
 }
 
-void MainWidget::set_fixed_velocity(float vel) {
-    velocity_y = vel;
+void MainWidget::set_fixed_velocity(float vel_y, float vel_x) {
+    velocity_y = vel_y;
+    velocity_x = vel_x;
     is_velocity_fixed = true;
-    if (vel == 0) {
+    if (vel_y == 0 && vel_x == 0) {
         is_velocity_fixed = false;
         if (validation_interval_timer->interval() == 0){
             validation_interval_timer->setInterval(INTERVAL_TIME);

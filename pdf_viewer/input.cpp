@@ -2895,25 +2895,45 @@ public:
         velocity_multiplier = velocity_mult;
     };
 
-    virtual bool is_down() = 0;
+    virtual bool is_down(){
+        return false;
+    }
+
+    virtual bool is_up(){
+        return false;
+    }
+
+    virtual bool is_left(){
+        return false;
+    }
+
+    virtual bool is_right(){
+        return false;
+    }
 
     void perform() {
         if (widget->main_document_view->is_ruler_mode()) {
             if (is_down()) {
                 widget->move_visual_mark_next();
             }
-            else {
+            if (is_up()) {
                 widget->move_visual_mark_prev();
             }
         }
         else {
-            widget->handle_move_smooth_hold(is_down());
-            widget->set_fixed_velocity(is_down() ? -SMOOTH_MOVE_MAX_VELOCITY * velocity_multiplier : SMOOTH_MOVE_MAX_VELOCITY * velocity_multiplier);
+            if (is_down() || is_up()){
+                widget->handle_move_smooth_hold(is_down());
+                widget->set_fixed_velocity(is_down() ? -SMOOTH_MOVE_MAX_VELOCITY * velocity_multiplier : SMOOTH_MOVE_MAX_VELOCITY * velocity_multiplier, 0);
+            }
+            else{
+                widget->handle_move_smooth_hold(is_down());
+                widget->set_fixed_velocity(0, is_left() ? -SMOOTH_MOVE_MAX_VELOCITY * velocity_multiplier : SMOOTH_MOVE_MAX_VELOCITY * velocity_multiplier);
+            }
         }
     }
 
     void perform_up() {
-        widget->set_fixed_velocity(0);
+        widget->set_fixed_velocity(0, 0);
     }
 
     bool is_holdable() {
@@ -2932,7 +2952,12 @@ public:
 
     void on_key_hold() {
         was_held = true;
-        widget->handle_move_smooth_hold(is_down());
+        if (is_down() || is_up()){
+            widget->handle_move_smooth_hold(is_down());
+        }
+        else{
+            widget->handle_move_smooth_horizontal_hold(is_left());
+        }
         widget->validate_render();
     }
 };
@@ -2943,8 +2968,8 @@ public:
     static inline const std::string hname = "";
     MoveUpSmoothCommand(MainWidget* w) : MoveSmoothCommand(cname, w) {};
 
-    bool is_down() {
-        return false;
+    bool is_up() override {
+        return true;
     }
 };
 
@@ -2955,6 +2980,28 @@ public:
     MoveDownSmoothCommand(MainWidget* w) : MoveSmoothCommand(cname, w) {};
 
     bool is_down() {
+        return true;
+    }
+};
+
+class MoveLeftSmooth : public MoveSmoothCommand {
+public:
+    static inline const std::string cname = "move_left_smooth";
+    static inline const std::string hname = "";
+    MoveLeftSmooth(MainWidget* w) : MoveSmoothCommand(cname, w) {};
+
+    bool is_left() {
+        return true;
+    }
+};
+
+class MoveRightSmooth : public MoveSmoothCommand {
+public:
+    static inline const std::string cname = "move_right_smooth";
+    static inline const std::string hname = "";
+    MoveRightSmooth(MainWidget* w) : MoveSmoothCommand(cname, w) {};
+
+    bool is_right() {
         return true;
     }
 };
@@ -6784,6 +6831,8 @@ CommandManager::CommandManager(ConfigManager* config_manager) {
     register_command<MoveRightCommand>();
     register_command<MoveDownSmoothCommand>();
     register_command<MoveUpSmoothCommand>();
+    register_command<MoveLeftSmooth>();
+    register_command<MoveRightSmooth>();
     register_command<ScreenUpSmoothCommand>();
     register_command<ScreenDownSmoothCommand>();
     register_command<MoveLeftInOverviewCommand>();
