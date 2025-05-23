@@ -703,6 +703,9 @@ public:
     float velocity_y = 0;
     bool is_velocity_fixed = false;
 
+    // are we scrolling due to the mouse moving to the screen edge while selecting text?
+    bool is_mouse_edge_scrolling = false;
+
     // indicates if mouse was in next/prev ruler rect in touch mode
     // if this is the case, we use mouse movement to perform next/prev ruler command
     // after a certain threshold, so the user doesn't have to click on the ruler rect 
@@ -1012,6 +1015,7 @@ public:
     int update_recent_clicks(AbsoluteDocumentPos mouse_abspos);
     void handle_triple_click(AbsoluteDocumentPos mouse_abspos);
     void repeat_last_command();
+    void handle_selection_mouse_edge_scrolling(QMouseEvent* me);
 };
 
 MainWidget* get_window_with_window_id(int window_id);

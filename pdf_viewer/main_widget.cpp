@@ -552,6 +552,34 @@ void MainWidget::set_overview_link(PdfLink link) {
     }
 }
 
+void MainWidget::handle_selection_mouse_edge_scrolling(QMouseEvent* mouse_event){
+    bool are_we_above_the_window = mapFromGlobal(mouse_event->globalPos()).y() < 30;
+    bool are_we_below_the_window = mapFromGlobal(mouse_event->globalPos()).y() > main_window_height - 30;
+    if (are_we_above_the_window){
+        validation_interval_timer->setInterval(0);
+        set_fixed_velocity(SMOOTH_MOVE_MAX_VELOCITY, 0);
+        if (!is_mouse_edge_scrolling){
+            last_speed_update_time = QTime::currentTime();
+        }
+        is_mouse_edge_scrolling = true;
+        validate_render();
+
+    }
+    else if (are_we_below_the_window){
+        validation_interval_timer->setInterval(0);
+        set_fixed_velocity(-SMOOTH_MOVE_MAX_VELOCITY, 0);
+        if (!is_mouse_edge_scrolling){
+            last_speed_update_time = QTime::currentTime();
+        }
+        is_mouse_edge_scrolling = true;
+        validate_render();
+    }
+    else if (is_mouse_edge_scrolling){
+        set_fixed_velocity(0, 0);
+        is_mouse_edge_scrolling = false;
+    }
+}
+
 void MainWidget::mouseMoveEvent(QMouseEvent* mouse_event) {
     if (is_pinching){
         // no need to handle move events when a pinch to zoom is in progress
@@ -562,6 +590,10 @@ void MainWidget::mouseMoveEvent(QMouseEvent* mouse_event) {
         // we don't handle mouse events while document is rotated becausae proper handling
         // would increase the code complexity too much to be worth it
         return;
+    }
+
+    if (!TOUCH_MODE && is_selecting){
+        handle_selection_mouse_edge_scrolling(mouse_event);
     }
 
     if (should_draw(false) && is_drawing) {
