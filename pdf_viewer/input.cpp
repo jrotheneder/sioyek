@@ -3012,8 +3012,8 @@ public:
     static inline const std::string hname = "Move screen up smoothly";
     ScreenUpSmoothCommand(MainWidget* w) : MoveSmoothCommand(cname, w, 3.0f) {};
 
-    bool is_down() {
-        return false;
+    bool is_up() {
+        return true;
     }
 };
 
