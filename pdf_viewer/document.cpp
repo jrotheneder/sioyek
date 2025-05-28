@@ -23,6 +23,7 @@
 #include "sqlite3.h"
 #include "checksum.h"
 #include "database.h"
+#include "utf8/checked.h"
 #include "utils.h"
 
 extern bool SHOULD_RENDER_PDF_ANNOTATIONS;
@@ -821,35 +822,39 @@ void Document::create_toc_tree(std::vector<TocNode*>& toc) {
 void Document::convert_toc_tree(fz_outline* root, std::vector<TocNode*>& output) {
     // convert an fz_outline structure to a tree of TocNodes
 
-    std::vector<int> accum_chapter_pages;
-    count_chapter_pages_accum(accum_chapter_pages);
-
-    do {
-        if (root == nullptr || root->title == nullptr) {
-            break;
-        }
-
-        TocNode* current_node = new TocNode;
-        current_node->title = utf8_decode(root->title);
-        current_node->x = root->x;
-        current_node->y = root->y;
-        if (root->page.page == -1) {
-            float xp, yp;
-            fz_location loc = fz_resolve_link(context, doc, root->uri, &xp, &yp);
-            int chapter_page = 0;
-            if (loc.chapter >= 0 && loc.chapter < accum_chapter_pages.size()) {
-                chapter_page = accum_chapter_pages[loc.chapter];
+    try {
+        std::vector<int> accum_chapter_pages;
+        count_chapter_pages_accum(accum_chapter_pages);
+        do {
+            if (root == nullptr || root->title == nullptr) {
+                break;
             }
-            current_node->page = chapter_page + loc.page;
-        }
-        else {
-            current_node->page = root->page.page;
-        }
-        convert_toc_tree(root->down, current_node->children);
+
+                TocNode* current_node = new TocNode;
+                current_node->title = utf8_decode(root->title);
+                current_node->x = root->x;
+                current_node->y = root->y;
+            if (root->page.page == -1) {
+                float xp, yp;
+                fz_location loc = fz_resolve_link(context, doc, root->uri, &xp, &yp);
+                int chapter_page = 0;
+                if (loc.chapter >= 0 && loc.chapter < accum_chapter_pages.size()) {
+                    chapter_page = accum_chapter_pages[loc.chapter];
+                }
+                current_node->page = chapter_page + loc.page;
+            }
+            else {
+                current_node->page = root->page.page;
+            }
+            convert_toc_tree(root->down, current_node->children);
 
 
-        output.push_back(current_node);
-    } while ((root = root->next));
+            output.push_back(current_node);
+        } while ((root = root->next));
+    }
+    catch(utf8::exception& e) {
+        std::cerr << "could not convert toc node: " << e.what() << std::endl;
+    }
 }
 
 PdfLink Document::merge_links(const std::vector<PdfLink>& links_to_merge) {
