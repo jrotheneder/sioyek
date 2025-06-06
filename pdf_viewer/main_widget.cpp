@@ -1985,6 +1985,18 @@ void MainWidget::open_document_with_hash(const std::string& path, std::optional<
     }
 }
 
+void MainWidget::adjust_two_page_mode_document_zoom_and_offset(std::wstring doc_path){
+    if (main_document_view->is_two_page_mode()){
+        for (int i = history.size() - 1; i >= 0; i--){
+            if (history[i].document_path == doc_path){
+                main_document_view->set_offset_x(history[i].book_state.offset_x);
+                main_document_view->set_zoom_level(history[i].book_state.zoom_level, true);
+                return;
+            }
+        }
+    }
+}
+
 void MainWidget::open_document(const Path& path, std::optional<float> offset_x, std::optional<float> offset_y, std::optional<float> zoom_level) {
 
     opengl_widget->clear_all_selections();
@@ -2000,6 +2012,7 @@ void MainWidget::open_document(const Path& path, std::optional<float> offset_x, 
 
     main_document_view->on_view_size_change(main_window_width, main_window_height);
     main_document_view->open_document(path.get_path(), &this->is_render_invalidated);
+    adjust_two_page_mode_document_zoom_and_offset(doc()->get_path());
 
     if (doc()) {
         document_manager->add_tab(doc()->get_path());

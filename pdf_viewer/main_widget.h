@@ -1016,6 +1016,7 @@ public:
     void handle_triple_click(AbsoluteDocumentPos mouse_abspos);
     void repeat_last_command();
     void handle_selection_mouse_edge_scrolling(QMouseEvent* me);
+    void adjust_two_page_mode_document_zoom_and_offset(std::wstring doc_path);
 };
 
 MainWidget* get_window_with_window_id(int window_id);
