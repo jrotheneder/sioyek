@@ -1095,11 +1095,11 @@ void DocumentView::goto_chapter(int diff) {
 
     int index = 0;
 
-    while ((size_t)index < chapter_pages.size() && chapter_pages[index] < curr_page) {
+    while ((size_t)index < chapter_pages.size() && chapter_pages[index] <= curr_page) {
         index++;
     }
 
-    if (index < chapter_pages.size() && chapter_pages[index] > curr_page) {
+    if (index < chapter_pages.size() && chapter_pages[index] >= curr_page) {
         index--;
     }
 
