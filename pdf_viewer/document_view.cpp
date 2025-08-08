@@ -2059,6 +2059,11 @@ void DocumentView::fill_cached_virtual_rects(bool force) {
         needs_refill = true;
     }
     else {
+        // if we needed refill before and now the page dimensions are loaded
+        // then we should recalculate page rects
+        if (needs_refill){
+            force = true;
+        }
         needs_refill = false;
     }
 
