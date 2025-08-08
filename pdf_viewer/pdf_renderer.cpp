@@ -720,7 +720,7 @@ void PdfRenderer::free_all_resources_for_document(std::wstring doc_path) {
 void PdfRenderer::debug() {
     cached_response_mutex.lock();
     for (auto resp : cached_responses) {
-        std::wcout << resp.request.path << L" " << resp.request.page << L" " << resp.request.zoom_level << "(" << resp.width << "*" << resp.height << ")" << std::endl;
+        std::wcout << resp.request.path << L" " << resp.request.page << " " << resp.request.slice_index << L" " << resp.request.zoom_level << "(" << resp.width << "*" << resp.height << ")" << std::endl;
     }
     std::wcout << "________________________________________\n";
     cached_response_mutex.unlock();
