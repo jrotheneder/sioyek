@@ -1439,16 +1439,17 @@ void PdfViewOpenGLWidget::my_render(QPainter* painter) {
         if (visible_pages.size() > 0) {
             int num_pages = document_view->get_document()->num_pages();
             int max_page = visible_pages[visible_pages.size() - 1];
-            for (int i = 1; i < (PRERENDERED_PAGE_COUNT + 1); i++) {
+            for (int i = 0; i < (PRERENDERED_PAGE_COUNT + 1); i++) {
                 if (max_page + i < num_pages) {
                     float page_width = document_view->get_document()->get_page_width(max_page + i);
-                    float page_height = document_view->get_document()->get_page_width(max_page + i);
+                    float page_height = document_view->get_document()->get_page_height(max_page + i);
                     PagelessDocumentRect page_rect({ 0, 0, page_width, page_height });
                     int nh, nv;
                     num_slices_for_page_rect(page_rect, &nh, &nv);
 
                     for (int k = 0; k < nh * nv; k++) {
-                        pdf_renderer->find_rendered_page(document_view->get_document()->get_path(),
+                        pdf_renderer->find_rendered_page(
+                            document_view->get_document()->get_path(),
                             max_page + i,
                             document_view->get_document()->should_render_pdf_annotations(),
                             k,
