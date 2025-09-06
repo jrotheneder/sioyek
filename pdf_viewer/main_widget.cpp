@@ -9526,6 +9526,7 @@ QJsonObject MainWidget::get_json_state() {
         result["window_id"] = window_id;
         result["window_width"] = width();
         result["window_height"] = height();
+        result["ruler_index"] = dv()->get_line_index();
 
         std::vector<std::wstring> loaded_document_paths = document_manager->get_loaded_document_paths();
         QJsonArray loaded_documents;
@@ -11418,9 +11419,19 @@ void MainWidget::set_state(QJsonObject state) {
 
     int new_page_number = -1;
     if (state.contains("page_number")) {
+
         new_page_number = state["page_number"].toInt();
-        main_document_view->goto_page(new_page_number);
+        if (state.contains("ruler_index")){
+            int ruler_index = state["ruler_index"].toInt();
+            main_document_view->goto_page(new_page_number);
+            main_document_view->set_line_index(ruler_index, new_page_number);
+            main_document_view->goto_vertical_line_pos();
+        }
+        else{
+            main_document_view->goto_page(new_page_number);
+        }
     }
+
 
     if (state.contains("document_path")) {
         main_document_view->open_document(state["document_path"].toString().toStdWString(), &this->is_render_invalidated);
