@@ -124,6 +124,9 @@ struct ParseState {
                     if (ch == '\\') {
                         arg.push_back('\\');
                     }
+                    if (ch == ','){
+                        arg.push_back(',');
+                    }
                     is_prev_char_backslash = false;
                 }
                 else {
@@ -1701,6 +1704,20 @@ public:
         QJsonDocument doc(widget->get_all_json_states());
         std::wstring json_str = utf8_decode(doc.toJson(QJsonDocument::Compact).toStdString());
         result = json_str;
+    }
+};
+
+class SetStateJsonCommand : public TextCommand {
+
+public:
+    static inline const std::string cname = "set_state_json";
+    static inline const std::string hname = "";
+    SetStateJsonCommand(MainWidget* w) : TextCommand(cname, w) {};
+
+    void perform() {
+        QByteArray json_bytes = QString::fromStdWString(text.value()).toUtf8();
+        QJsonDocument doc = QJsonDocument::fromJson(json_bytes);
+        widget->set_state(doc.object());
     }
 };
 
@@ -6811,6 +6828,7 @@ CommandManager::CommandManager(ConfigManager* config_manager) {
     register_command<ShowOptionsCommand>();
     register_command<ShowTextPromptCommand>();
     register_command<GetStateJsonCommand>();
+    register_command<SetStateJsonCommand>();
     register_command<GetPaperNameCommand>();
     register_command<GetOverviewPaperName>();
     register_command<GetAnnotationsJsonCommand>();
