@@ -25,6 +25,7 @@ extern float HIDE_SYNCTEX_HIGHLIGHT_TIMEOUT;
 extern int PAGE_PADDINGS;
 extern bool SAME_WIDTH;
 extern bool SCROLL_PAST_DOCUMENT_ENDS;
+extern bool HORIZONTAL_SCROLL_PAST_PAGE_ENDS;
 extern bool RECTO_VERSO_ADJUSTMENT;
 
 DocumentView::DocumentView(DatabaseManager* db_manager,
@@ -1216,7 +1217,7 @@ void DocumentView::set_page_offset(int new_offset) {
 
 float DocumentView::get_max_valid_x(bool relenting) {
     float page_width = current_document->get_page_width(get_center_page_number());
-    if (!relenting){
+    if (!relenting && !HORIZONTAL_SCROLL_PAST_PAGE_ENDS){
         return std::abs(-view_width / zoom_level / 2 + page_width / 2);
     }
     else{
@@ -1226,7 +1227,7 @@ float DocumentView::get_max_valid_x(bool relenting) {
 
 float DocumentView::get_min_valid_x(bool relenting) {
     float page_width = current_document->get_page_width(get_center_page_number());
-    if (!relenting){
+    if (!relenting && !HORIZONTAL_SCROLL_PAST_PAGE_ENDS){
         return -std::abs(-view_width / zoom_level / 2 + page_width / 2);
     }
     else{
